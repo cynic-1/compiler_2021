@@ -48,10 +48,11 @@ const map<string, TokenType> separatorMap = {
         {"==", Eq}
 };
 
-void skipBlank() {
+bool skipBlank() {
     while (cur == ' ' || cur == '\n' || cur == '\t' || cur == '\r') {
         cur = cin.get();
     }
+    return cur == EOF;
 }
 
 bool isDigit(const char ch) {
@@ -69,8 +70,19 @@ bool isIdentNonDigit(const char ch) {
 }
 
 bool isLegalChar(const char ch) {
-    return (ch <= 45 && ch >= 40) || ch == 47
-    || (ch <= 62 && ch >= 59) || ch == 123 || ch == 125;
+    return
+    ch == '('
+    || ch == ')'
+    || ch == '{'
+    || ch == '}'
+    || ch == '+'
+    || ch == '*'
+    || ch == '/'
+    || ch == '<'
+    || ch == '>'
+    || ch == '='
+    || ch == ';'
+    ;
 }
 
 void getIdent() {
@@ -131,12 +143,14 @@ void getSeparator() {
 int main() {
     cur = cin.get();
     while (cur != EOF) {
-        skipBlank();
+        if (skipBlank()) {
+            return 0;
+        }
         if (isIdentNonDigit(cur)) {
             getIdent();
         } else if (isDigit(cur)) {
             getIntConst();
-        } else if (isLegalChar(cur)){  // the peek is safe because of the error-checker in getSeparator()
+        } else if (isLegalChar(cur)){
             getSeparator();
         } else {
             cout << "Err";
