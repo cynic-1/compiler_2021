@@ -3,8 +3,10 @@
 //
 
 #include <iostream>
+#include <fstream>
+#include <vector>
 #include <map>
-
+#include <cstring>
 
 using namespace std;
 
@@ -78,22 +80,24 @@ void getIdent() {
     }
 
     // check if it's a reserved word
-    auto itor = keyWordMap.find(in_buf);
-    if (itor != keyWordMap.end()) {
-        out_buf = tokenTypeStr[itor->second];
+    auto itor = reservedMap.find(in_buf);
+    if (itor != reservedMap.end()) {
+        out_buf = tokenTypeStr[itor->second] + " " + in_buf;
     } else {
-        out_buf = tokenTypeStr[Ident] + "(" + in_buf + ")";
+        out_buf = tokenTypeStr[IDENFR] + " " + in_buf;
     }
 }
 
 void getIntConst() {
     in_buf.clear();
     out_buf.clear();
+    value = 0;
     while (isDigit(cur)) {
         in_buf += cur;
         cur = cin.get();
+        value = value * 10 + cur - '0';
     }
-    out_buf = tokenTypeStr[Number] + "(" + in_buf + ")";
+    out_buf = tokenTypeStr[INTCON] + " " + in_buf;
 }
 
 void getSeparator() {
@@ -123,19 +127,20 @@ void getSeparator() {
         return;
     }
 
+    // could't find the separator
 }
 
 
 int main() {
     cur = cin.get();
     while (cur != EOF) {
-        skipBlank();
+        skipBlank(cin);
         if (isIdentNonDigit(cur)) {
-            getIdent();
+            getIdent(cin);
         } else if (isDigit(cur)) {
-            getIntConst();
+            getIntConst(cin);
         } else {  // the peek is safe because of the error-checker in getSeparator()
-            getSeparator();
+            getSeparator(cin);
         }
         cout << out_buf << endl;
     }
