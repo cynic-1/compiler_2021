@@ -3,10 +3,8 @@
 //
 
 #include <iostream>
-#include <fstream>
-#include <vector>
 #include <map>
-#include <cstring>
+
 
 using namespace std;
 
@@ -25,7 +23,6 @@ const string tokenTypeStr[32] = {
 string in_buf = "";
 string out_buf = "";
 char cur;
-char next;
 
 const map<string, TokenType> keyWordMap = {
         {"if", If},
@@ -71,6 +68,11 @@ bool isIdentNonDigit(const char ch) {
         return false;
 }
 
+bool isLegalChar(const char ch) {
+    return (ch <= 45 && ch >= 40) || ch == 47
+    || (ch <= 62 && ch >= 59) || ch == 123 || ch == 125;
+}
+
 void getIdent() {
     in_buf.clear();
     out_buf.clear();
@@ -80,24 +82,22 @@ void getIdent() {
     }
 
     // check if it's a reserved word
-    auto itor = reservedMap.find(in_buf);
-    if (itor != reservedMap.end()) {
-        out_buf = tokenTypeStr[itor->second] + " " + in_buf;
+    auto itor = keyWordMap.find(in_buf);
+    if (itor != keyWordMap.end()) {
+        out_buf = tokenTypeStr[itor->second];
     } else {
-        out_buf = tokenTypeStr[IDENFR] + " " + in_buf;
+        out_buf = tokenTypeStr[Ident] + "(" + in_buf + ")";
     }
 }
 
 void getIntConst() {
     in_buf.clear();
     out_buf.clear();
-    value = 0;
     while (isDigit(cur)) {
         in_buf += cur;
         cur = cin.get();
-        value = value * 10 + cur - '0';
     }
-    out_buf = tokenTypeStr[INTCON] + " " + in_buf;
+    out_buf = tokenTypeStr[Number] + "(" + in_buf + ")";
 }
 
 void getSeparator() {
@@ -107,9 +107,7 @@ void getSeparator() {
     // store the first char
     in_buf += cur;
     cur = cin.get();
-    if (cur == EOF) {
-        // error check
-    }
+
     // check if it's a two-character separator
     string temp(in_buf + cur);
     auto iter = separatorMap.find(temp);
@@ -127,20 +125,22 @@ void getSeparator() {
         return;
     }
 
-    // could't find the separator
 }
 
 
 int main() {
     cur = cin.get();
     while (cur != EOF) {
-        skipBlank(cin);
+        skipBlank();
         if (isIdentNonDigit(cur)) {
-            getIdent(cin);
+            getIdent();
         } else if (isDigit(cur)) {
-            getIntConst(cin);
-        } else {  // the peek is safe because of the error-checker in getSeparator()
-            getSeparator(cin);
+            getIntConst();
+        } else if (isLegalChar(cur)){  // the peek is safe because of the error-checker in getSeparator()
+            getSeparator();
+        } else {
+            cout << "Err";
+            return 0;
         }
         cout << out_buf << endl;
     }
