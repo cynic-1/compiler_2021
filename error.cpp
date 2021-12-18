@@ -83,6 +83,8 @@ void ErrorCheckUnit::checkTokenUnmatched(const int &appeared, const int &expecte
     if (appeared == expected) {
         return;
     }
+    cout << "appeared: " << appeared << endl;
+    cout << "expected: " << expected << endl;
     cout << "Error! Token Unmatched" << endl;
     exit(-1);
 }
