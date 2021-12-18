@@ -54,6 +54,7 @@ void IR::addArithmetic(const string& result, TokenType op, const string &op1, co
     irCodes += (result + " = " + typeNames[op] + " i32 " + op1);
     addCommaSpace();
     irCodes += op2;
+    cout << irCodes << endl;
     IR::addNewLine();
 }
 
@@ -275,16 +276,6 @@ void IR::addZextTo(const string &result, const string &value) {
     irCodes += (result + " = zext i1 " + value + " to i32");
     IR::addNewLine();
 }
-
-///**
-// * <result> = and <ty> <op1>, <op2>
-// * @param result
-// * @param op1
-// * @param op2
-// */
-//void IR::addAnd(const string &result, const string &op1, const string &op2) {
-//    irCodes += (result + " = and ")
-//}
 
 void IR::addLabel(const string& label) {
     IR::addNewLine();
