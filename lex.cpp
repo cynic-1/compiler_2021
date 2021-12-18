@@ -84,6 +84,13 @@ bool isIdentNonDigit(const char ch) {
         return false;
 }
 
+bool isHexChar(const char ch) {
+    if ((ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F') || ch == 'x' || ch == 'X') {
+        return true;
+    }
+    return false;
+}
+
 int getIdent() {
     while (isDigit(curChar) || isIdentNonDigit(curChar)) {
         tokenContextBuffer.token += curChar;
@@ -100,10 +107,9 @@ int getIdent() {
 }
 
 int getIntConst() {
-    while (isDigit(curChar)) {
+    while (isDigit(curChar) || isHexChar(curChar)) {
         tokenContextBuffer.token += curChar;
         curChar = inputFile.get();
-        // value = value * 10 + curChar - '0';
     }
     string& token = tokenContextBuffer.token;
 
