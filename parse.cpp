@@ -544,7 +544,10 @@ pair<IdentType, int> lVal(string &result, vector<string> &dimIdx, bool isAssigne
     string lvalName = ident.token;
 
     // 防止预检查时乱走
-    if(preCheckUndef(curScopeIndex, lvalName, false)) return ret;
+    if(preCheckUndef(curScopeIndex, lvalName, false)) {
+        cout << "lvalName: " + lvalName << endl;
+        return ret;
+    }
 
     if (isAssigned) {
         ErrorCheckUnit::checkConstAssign(curScopeIndex, lvalName);
@@ -1297,7 +1300,6 @@ pair<IdentType, int> primaryExp(string &result) {
     } else {
         ret = number(result);
     }
-//    printSyn(PrimaryExp);
     return ret;
 }
 
