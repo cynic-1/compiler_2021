@@ -28,6 +28,9 @@ string getOffset(const vector<string>& calledAxis, const vector<int> & offsets) 
 }
 
 int getOffset(const vector<int>& calledAxis, const vector<int> & offsets) {
+    if (calledAxis.empty()) {
+        return 0;
+    }
     int offset = 0;
     for (int i = 0; i < calledAxis.size(); ++i) {
         offset += calledAxis[i] * offsets[i];
@@ -172,11 +175,15 @@ void constDef(IdentType type) {
         }
         SymbolTable::addConstSymbol(curScopeIndex, ident.token, type, axis, constValues);
         // 常量中除了全局常量，都不输出IR，只填表
-        if (curScopeIndex == 0 && axis.size() != 0) { // global array
+        if (curScopeIndex == 0) { // global array
             symbolTableNode* sNode = SymbolTable::findVarSymbol(curScopeIndex, ident.token);
             sNode->offsets = offsets;
             IR::addGlobalArray(ident.token, true, axis, initValues);
         }
+    } else {
+        vector<int> constValues(1);
+        constValues[0] = stoi(ipb.front());
+        SymbolTable::addConstSymbol(curScopeIndex, ident.token, type, axis, constValues);
     }
 
 }
@@ -517,8 +524,8 @@ bool preCheckUndef(int curScope, string &name, bool isFunc) {
     } else {
         item = SymbolTable::findVarSymbol(curScope, name);
     }
-    if (item == nullptr) return false;
-    return true;
+    if (item == nullptr) return true;
+    return false;
 }
 
 /**
@@ -537,7 +544,7 @@ pair<IdentType, int> lVal(string &result, vector<string> &dimIdx, bool isAssigne
     string lvalName = ident.token;
 
     // 防止预检查时乱走
-    if(!preCheckUndef(curScopeIndex, lvalName, false)) return ret;
+    if(preCheckUndef(curScopeIndex, lvalName, false)) return ret;
 
     if (isAssigned) {
         ErrorCheckUnit::checkConstAssign(curScopeIndex, lvalName);
