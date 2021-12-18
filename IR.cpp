@@ -54,7 +54,6 @@ void IR::addArithmetic(const string& result, TokenType op, const string &op1, co
     irCodes += (result + " = " + typeNames[op] + " i32 " + op1);
     addCommaSpace();
     irCodes += op2;
-    cout << irCodes << endl;
     IR::addNewLine();
 }
 

@@ -545,7 +545,7 @@ pair<IdentType, int> lVal(string &result, vector<string> &dimIdx, bool isAssigne
 
     // 防止预检查时乱走
     if(preCheckUndef(curScopeIndex, lvalName, false)) {
-        cout << "lvalName: " + lvalName << endl;
+//        cout << "lvalName: " + lvalName << endl;
         return ret;
     }
 
@@ -1373,6 +1373,20 @@ pair<IdentType, int> unaryExp(string &result) {
                     } else {
                         result = "1";
                     }
+                    break;
+            }
+        } else {
+            switch (op) {
+                case Add:
+                    result = tempResult;
+                    break;
+                case Minus:
+                    result = IR::generateRegister();
+                    IR::addArithmetic(result, Minus, "0", tempResult);
+                    break;
+                case Not:
+                    result = IR::generateRegister();
+                    IR::addIcmp(result, Eq, tempResult, "0");
                     break;
             }
         }
