@@ -1,5 +1,6 @@
 FROM frolvlad/alpine-gxx
 WORKDIR /app/
-COPY lex.cpp ./
-RUN g++ lex.cpp -o lex
-RUN chmod +x lex
+COPY *.cpp *.h ./
+RUN g++ -c *.cpp
+RUN g++ *.o -o compiler
+RUN chmod +x compiler
