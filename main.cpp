@@ -14,13 +14,10 @@ int main(int argc, char* argv[]) {
     if (argc == 0) {
         inputFile.open("testfile.txt");
         irFile.open("ir.txt");
-    } else if (argc == 2){
+    } else{
         inputFile.open(argv[1]);
         irFile.open(argv[2]);
-    } else {
-        cout << "Error! In ARGUMENT!" << endl;
-        exit(-1);
-    }
+    } 
     if (inputFile.fail()) {
         return -1;
     }
