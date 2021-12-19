@@ -48,6 +48,18 @@ void addGlobalArrayPointerNames() {
     }
 }
 
+void addLocalizedParam(int scopeIdx) {
+    for (auto & symbolItem:SymbolTable::allScopes.at(scopeIdx).allSymbols) {
+        if (symbolItem.kind == Param && symbolItem.dimension == 0) {
+            string newPointerName = IR::generateRegister();
+            vector<int> unused;
+            IR::addAlloca(newPointerName, unused);
+            IR::addStore(symbolItem.regName, newPointerName);
+            symbolItem.pointerName = newPointerName;
+        }
+    }
+}
+
 void tryReplaceConst(string &name, const vector<string>& calledAxis) {
     if (isValue(name)) {
         return;
@@ -501,6 +513,8 @@ void block(vector<symbolTableNode> funcFPsLinkVersion, ScopeKind kind, bool isVo
         ErrorCheckUnit::checkDupDef(curScopeIndex, iter.name, false);
         SymbolTable::addParamSymbol(curScopeIndex, iter);
     }
+
+    addLocalizedParam(curScopeIndex);
 
     while (curTokenContext.tokenType != RBrace) {
         blockItem();
