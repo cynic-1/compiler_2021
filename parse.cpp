@@ -338,6 +338,7 @@ void varDef(IdentType type) {
         } else { // global array no-assign
             if (axis.empty()) { // normal var
                 IR::addGlobal(ident.token, "0");
+                sNode->pointerName = "@" + sNode->name;
             } else { // global no-assign array
                 vector<vector<string>> initValues;
                 sNode->offsets = getOffsetsVector(axis);
