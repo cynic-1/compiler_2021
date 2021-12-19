@@ -587,9 +587,10 @@ pair<IdentType, int> lVal(string &result, vector<string> &dimIdx, bool isAssigne
 //                IR::addLoad(temp, identSym->pointerName);
 //            }
 //            result = identSym->regName;
-            // 还是不做这种优化了，容易出现Instruction does not dominate all uses!的错误
+//             还是不做这种优化了，容易出现Instruction does not dominate all uses!的错误
             string temp = IR::generateRegister();
             IR::addLoad(temp, identSym->pointerName);
+            result = temp;
             return ret;
         } else {
             // array
