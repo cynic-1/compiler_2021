@@ -1,7 +1,3 @@
-//
-// Created by song on 2021/12/11.
-//
-
 #include "IR.h"
 #include "utils.h"
 

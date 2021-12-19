@@ -12,7 +12,7 @@ ofstream irFile;
 
 int main(int argc, char* argv[]) {
     if (argc == 1) {
-        inputFile.open("testfile.txt");
+        inputFile.open("input.txt");
         irFile.open("ir.txt");
     } else {
         inputFile.open(argv[1]);

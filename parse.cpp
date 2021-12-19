@@ -588,6 +588,11 @@ pair<IdentType, int> lVal(string &result, vector<string> &dimIdx, bool isAssigne
         getToken(RBracket);
         ret.second--;
     }
+
+    if (isPreCheck) {
+        return ret;
+    }
+
     string name = ident.token;
     symbolTableNode *identSym = SymbolTable::findVarSymbol(curScopeIndex, name);
 
@@ -606,6 +611,13 @@ pair<IdentType, int> lVal(string &result, vector<string> &dimIdx, bool isAssigne
 //            }
 //            result = identSym->regName;
 //             还是不做这种优化了，容易出现Instruction does not dominate all uses!的错误
+            if (identSym->kind == Param && identSym->pointerName.empty()) {
+                string pointer = IR::generateRegister();
+                vector<int> unused;
+                IR::addAlloca(pointer,  unused);
+                IR::addStore(identSym->regName, pointer);
+                identSym->pointerName = pointer;
+            }
             string temp = IR::generateRegister();
             IR::addLoad(temp, identSym->pointerName);
             result = temp;
