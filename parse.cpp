@@ -760,16 +760,19 @@ pair<IdentType, int> mulExp(string &result, bool& isI1) {
                     break;
             }
             result = tempResult1;
+            tempRes1IsI1 = false;
         } else {
             string temp;
             IR::addArithmetic(temp, op, tempResult1, tempResult2, tempRes1IsI1, tempRes2IsI1);
             SymbolTable::addTempSymbol(curScopeIndex, temp, IntType);
-            result = tempResult1 = temp;
-            isI1 = false;
+            tempResult1 = temp;
+            tempRes1IsI1 = false;
         }
 
         op = static_cast<TokenType>(curTokenContext.tokenType);
     }
+    result = tempResult1;
+    isI1 = tempRes1IsI1;
     return ret;
 }
 
@@ -784,7 +787,6 @@ pair<IdentType, int> addExp(string &result, bool& isI1) {
     string tempResult1;
     bool tempRes1IsI1 = false;
     pair<IdentType, int> ret = mulExp(tempResult1, tempRes1IsI1);
-    result = tempResult1;
 
     TokenType op = static_cast<TokenType>(curTokenContext.tokenType);
     while (op == Add || op == Minus) {
@@ -808,17 +810,19 @@ pair<IdentType, int> addExp(string &result, bool& isI1) {
                     break;
             }
             result = tempResult1;
+            tempRes1IsI1 = false;
         } else {
             string temp;
             IR::addArithmetic(temp, op, tempResult1, tempResult2, tempRes1IsI1, tempRes2IsI1);
-            SymbolTable::addTempSymbol(curScopeIndex, temp, IntType);
             result = tempResult1 = temp;
-            isI1 = false;
+            tempRes1IsI1 = false;
         }
 
         op = static_cast<TokenType>(curTokenContext.tokenType);
 
     }
+    result = tempResult1;
+    isI1 = tempRes1IsI1;
     return ret;
 }
 
@@ -1422,7 +1426,7 @@ pair<IdentType, int> unaryExp(string &result, bool& isI1) {
     } else {
         TokenType op = unaryOp();
         string tempResult;
-        bool tempIsI1;
+        bool tempIsI1 = false;
         ret = unaryExp(tempResult, tempIsI1);
 
         vector<string> t;
