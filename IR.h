@@ -41,6 +41,7 @@ public:
     static void addRet();
     static void addLabel(const string& label);
     static void addZextTo(const string& result, const string& value);
+    static void addZextToBool(const string& result, const string& value);
 //    static void addAnd(const string& result, const string &op1, const string& op2);
 //    static void addOr(const string& result, const string &op1, const string& op2);
 

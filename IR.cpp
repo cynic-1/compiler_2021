@@ -299,6 +299,11 @@ void IR::addZextTo(const string &result, const string &value) {
     IR::addNewLine();
 }
 
+void IR::addZextToBool(const string &result, const string &value) {
+    irCodes += (result + " = zext i32 " + value + " to i1");
+    IR::addNewLine();
+}
+
 void IR::addLabel(const string& label) {
     IR::addNewLine();
     irCodes += (label.substr(1) + ":");

@@ -871,6 +871,11 @@ void eqExp(string &cond) {
         }
         op = static_cast<TokenType>(curTokenContext.tokenType);
     }
+    if (!tempRes1IsI1) {
+        string temp = IR::generateRegister();
+        IR::addZextToBool(temp, tempResult1);
+        tempResult1 = temp;
+    }
     cond = tempResult1;
 }
 
