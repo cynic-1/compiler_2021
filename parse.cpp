@@ -874,6 +874,7 @@ void eqExp(string &cond) {
     if (!tempRes1IsI1) {
         string temp;
         IR::addIcmp(temp, Neq, tempResult1, "0", tempRes1IsI1, false);
+        tempResult1 = temp;
     }
     cond = tempResult1;
 }
