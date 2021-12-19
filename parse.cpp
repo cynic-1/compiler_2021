@@ -14,12 +14,12 @@ int curScopeIndex = NON_PARENT;
 
 string getOffset(const vector<string>& calledAxis, const vector<int> & offsets) {
     if (calledAxis.empty()) return "0";
-    string offset = IR::generateRegister();
+    string offset;
     IR::addArithmetic(offset, Add, "0", "0");
     for (int i = 0; i < calledAxis.size(); ++i) {
-        string result = IR::generateRegister();
+        string result;
         IR::addArithmetic(result, Mul, calledAxis[i], to_string(offsets[i]));
-        string temp = IR::generateRegister();
+        string temp;
         IR::addArithmetic(temp, Add, offset, result);
         offset = temp;
     }
@@ -236,7 +236,7 @@ void varDef(IdentType type) {
     }
 
     ErrorCheckUnit::checkDupDef(curScopeIndex, ident.token, false);
-    if (curScopeIndex > 0) { // local aka non-global
+    if (curScopeIndex > 0) { // local
         string pointerName = IR::generateRegister();
         IR::addAlloca(pointerName, axis);
         SymbolTable::addVarSymbol(curScopeIndex, ident.token, pointerName, type, axis);
@@ -284,7 +284,6 @@ void varDef(IdentType type) {
         } else {
             if (!axis.empty()) {
                 vector<int> offsets = getOffsetsVector(axis);
-                int bytes = offsets.front() * axis.front() * 4;
 
                 // 拿数组的i32*的指针
                 string pointer = IR::generateRegister();
@@ -306,36 +305,36 @@ void varDef(IdentType type) {
             vector<string> ipb;
             initVal(initValues, ipb, 0, axis.size());
             // assign with the init values, and iniValues.size() is the count of the var
-            if (axis.empty()) {
+            if (axis.empty()) { // global normal var
                 if (ipb.size() == 1) {   // normalVar init
                     if (!isValue(ipb[0])) {
                         exit(-1);
                     }
                     IR::addGlobal(sNode->name, ipb[0]);
-                } else if (initValues.empty()) {
+                } else if (initValues.empty()) { // global normal var no-assign
                     IR::addGlobal(sNode->name, "0");
                 }
+                sNode->pointerName = "@" + sNode->name;
             }
-            else { // dimension > 0
+            else { // dimension > 0 global array
                 // TODO: global array declare (with assign)
                 vector<int> offsets = getOffsetsVector(axis);
 
                 // 更新pointerName为i32*型的，添加offsets
 
                 sNode->offsets = offsets;
-
                 IR::addGlobalArray(ident.token, false, axis, initValues);
             }
-        } else { // no-assign
+        } else { // global array no-assign
             if (axis.empty()) { // normal var
                 IR::addGlobal(ident.token, "0");
+                sNode->pointerName = "@" + sNode->name;
             } else { // global no-assign array
                 vector<vector<string>> initValues;
                 sNode->offsets = getOffsetsVector(axis);
                 IR::addGlobalArray(ident.token, false, axis, initValues);
             }
         }
-        sNode->pointerName = "@" + sNode->name;
     }
 }
 
