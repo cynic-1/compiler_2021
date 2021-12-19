@@ -1159,16 +1159,19 @@ void ifStmt(string & label) {
         int parentScopeIdx = curScope->parentScopeIndex;
         curScopeIndex = SymbolTable::exitScope(curScopeIndex);
 
-        if (hasReturnIf && hasReturnElse) {
-            SymbolTable::findScope(parentScopeIdx)->hasReturned = true;
-        }
-
         IR::addBr(label);
 
-//        cout << SymbolTable::findScope(curScopeIndex)->parentScopeIndex << endl;
-        if (SymbolTable::findScope(curScopeIndex)->parentScopeIndex == 0) {
-            IR::exitFuncButNoNewDefYet = true;
+        if (hasReturnIf && hasReturnElse) {
+            SymbolTable::findScope(parentScopeIdx)->hasReturned = true;
+            if (SymbolTable::findScope(curScopeIndex)->parentScopeIndex == 0) {
+                IR::exitFuncButNoNewDefYet = true;
+            }
         }
+
+
+
+//        cout << SymbolTable::findScope(curScopeIndex)->parentScopeIndex << endl;
+
 
 
     } else {
