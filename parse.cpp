@@ -38,6 +38,16 @@ int getOffset(const vector<int>& calledAxis, const vector<int> & offsets) {
     return offset;
 }
 
+void addGlobalArrayPointerNames() {
+    for (auto & symbolItem:SymbolTable::allScopes.front().allSymbols) {
+        if (symbolItem.kind == Var && symbolItem.dimension > 0) {
+            string newPointerName = IR::generateRegister();
+            IR::addGetElePtr(newPointerName, "@" + symbolItem.name, symbolItem.axis);
+            symbolItem.pointerName = newPointerName;
+        }
+    }
+}
+
 void tryReplaceConst(string &name, const vector<string>& calledAxis) {
     if (isValue(name)) {
         return;
@@ -328,7 +338,6 @@ void varDef(IdentType type) {
         } else { // global array no-assign
             if (axis.empty()) { // normal var
                 IR::addGlobal(ident.token, "0");
-                sNode->pointerName = "@" + sNode->name;
             } else { // global no-assign array
                 vector<vector<string>> initValues;
                 sNode->offsets = getOffsetsVector(axis);
@@ -347,6 +356,8 @@ void funcDef() {
 
     TokenContext ident = getToken(Ident);
     vector<symbolTableNode> funcFPsListLinkVersion;
+
+    IR::resetIndex();
 
     getToken(LParen);
     if (isFuncFPsAtFuncDef())
@@ -368,6 +379,8 @@ void funcDef() {
     SymbolTable::addFuncSymbol(curScopeIndex, ident.token, type, paramsTypeDimList, FParamsNames);
 
     IR::addLBrace();
+
+    addGlobalArrayPointerNames();
 
     block(funcFPsListLinkVersion, FuncScope, (type == VoidType), ident.token);
 
@@ -396,6 +409,8 @@ void mainFuncDef() {
     IR::resetIndex();
 
     IR::addLBrace();
+
+    addGlobalArrayPointerNames();
 
     block(vector<symbolTableNode>(), FuncScope, false, "main");
 

@@ -101,17 +101,6 @@ public:
     static symbolTableNode* findVarSymbol4ErrorCheck(int curScope, string& varName);
     static Scope* findFirstLoopScope(int curScope);
 
-    // functions below are for translating IR to Mips. Because the SymTable
-    // is completed at this time, so some lookup behavior is different: the var must be
-    // indicted of the scopeIdx it's in.
-    // compositeName is like a@4, means var named a in scope 4.
-    static symbolTableNode* lookupVarSymInGen(string& compositeName);
-    // static symbolTableNode* lookupFuncSymInGen(string& compositeName);
-
-    static int lookupVarDefScopeIdx(int curScopeIdx, string& name);
-
-
-
 };
 
 
