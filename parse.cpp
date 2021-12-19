@@ -1385,8 +1385,10 @@ pair<IdentType, int> unaryExp(string &result) {
                     IR::addArithmetic(result, Minus, "0", tempResult);
                     break;
                 case Not:
+                    string temp = IR::generateRegister();
+                    IR::addZextTo(temp, tempResult);
                     result = IR::generateRegister();
-                    IR::addIcmp(result, Eq, tempResult, "0");
+                    IR::addIcmp(result, Eq, temp, "0");
                     break;
             }
         }
