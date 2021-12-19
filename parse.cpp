@@ -1165,6 +1165,12 @@ void ifStmt(string & label) {
 
         IR::addBr(label);
 
+//        cout << SymbolTable::findScope(curScopeIndex)->parentScopeIndex << endl;
+        if (SymbolTable::findScope(curScopeIndex)->parentScopeIndex == 0) {
+            IR::exitFuncButNoNewDefYet = true;
+        }
+
+
     } else {
         // don't have else part, tag the false label plainly.
         IR::addLabel(falseLabel);
@@ -1243,7 +1249,7 @@ void returnStmt() {
     getToken(Semicolon);
 
     SymbolTable::findScope(curScopeIndex)->hasReturned = true;
-
+    cout << SymbolTable::findScope(curScopeIndex)->parentScopeIndex << endl;
     string funcName = SymbolTable::findFirstFuncScope(curScopeIndex)->funcName;
     if (retResult.empty()) {
         IR::addRet();

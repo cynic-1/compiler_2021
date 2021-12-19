@@ -5,7 +5,7 @@ int IR::index = 0;
 string IR::irCodes;
 string IR::tempCodes;
 bool IR::exitBlockButNotLabelYet = false; // br, ret
-
+bool IR::exitFuncButNoNewDefYet = false;
 
 void IR::addFuncDef(IdentType returnType, const string& funcName, vector<symbolTableNode>& params) {
     irCodes += ("define " + typeNames[returnType] + " @" + funcName);
@@ -13,6 +13,7 @@ void IR::addFuncDef(IdentType returnType, const string& funcName, vector<symbolT
     IR::addFuncParams(params);
     IR::addRParen();
     exitBlockButNotLabelYet = false;
+    exitFuncButNoNewDefYet = false;
 }
 void IR::addFuncParams(vector<symbolTableNode>& params) {
     bool noParam = true;
@@ -48,7 +49,7 @@ void IR::addFuncParam(symbolTableNode & param) {
  * @param op2
  */
 void IR::addArithmetic(string& result, TokenType op, string op1, string op2, bool isOp1I1, bool isOp2I1) {
-    if (isPreCheck) return;
+    if (isPreCheck || exitFuncButNoNewDefYet) return;
 
     if (isOp1I1) {
         string temp = IR::generateRegister();
@@ -74,6 +75,7 @@ void IR::addArithmetic(string& result, TokenType op, string op1, string op2, boo
  * @param arguments
  */
 void IR::addCall(const string& result, const string& funcName, vector<string>& arguments, const vector<pair<IdentType, int>>& argumentsType) {
+    if (exitFuncButNoNewDefYet) return;
     irCodes += (result + " = call i32 @" + funcName);
     IR::addLParen();
     addArguments(arguments, argumentsType);
@@ -82,6 +84,7 @@ void IR::addCall(const string& result, const string& funcName, vector<string>& a
 }
 
 void IR::addCall(const string &funcName, vector<string>& arguments, const vector<pair<IdentType, int>>& argumentsType) {
+    if (exitFuncButNoNewDefYet) return;
     irCodes += ("call void @" + funcName);
     IR::addLParen();
     addArguments(arguments, argumentsType);
@@ -90,6 +93,7 @@ void IR::addCall(const string &funcName, vector<string>& arguments, const vector
 }
 
 void IR::addArguments(vector<string>& arguments, const vector<pair<IdentType, int>>& argumentsType) {
+    if (exitFuncButNoNewDefYet) return;
     bool noArg = true;
     if (!arguments.empty()) {
         for (int i = 0; i < arguments.size(); i++) {
@@ -105,6 +109,7 @@ void IR::addArguments(vector<string>& arguments, const vector<pair<IdentType, in
 }
 
 void IR::addArgument(string & arguments, bool isArray) {
+    if (exitFuncButNoNewDefYet) return;
     if (isArray) {
         irCodes += ("i32* " + arguments);
     } else {
@@ -117,6 +122,8 @@ void IR::addArgument(string & arguments, bool isArray) {
  * @param result
  */
 void IR::addAlloca(const string &result, const vector<int> &axis) {
+    if (exitFuncButNoNewDefYet) return;
+
     string code;
     code = (result + " = alloca ");
     code += getArrayTypeString(axis);
@@ -126,6 +133,8 @@ void IR::addAlloca(const string &result, const vector<int> &axis) {
 
 string IR::getArrayTypeString(const vector<int> &axis, int idx) {
     string code;
+    if (exitFuncButNoNewDefYet) return code;
+
     for (int i = idx; i < axis.size(); i++) {
         code += ("[" + to_string(axis[i]) + " x ");
     }
@@ -137,11 +146,15 @@ string IR::getArrayTypeString(const vector<int> &axis, int idx) {
 }
 
 void IR::addMemset(const string &pointerName, int val, int bytes) {
+    if (exitFuncButNoNewDefYet) return;
+
     irCodes += ("call void @memset(i32* " + pointerName + ", i32 " + to_string(val) + ", i32 " + to_string(bytes) + ")");
     IR::addNewLine();
 }
 
 void IR::addGetElePtr(const string &pointerName, const string &basePointerName, const vector<int>& axis, const string& offset) {
+    if (exitFuncButNoNewDefYet) return;
+
     string str, type;
     type = getArrayTypeString(axis);
     str = (pointerName + " = getelementptr " + type + ", " + type + "* " + basePointerName);
@@ -157,6 +170,8 @@ void IR::addGetElePtr(const string &pointerName, const string &basePointerName, 
 }
 
 void IR::addGetElePtrLater(const string &pointerName, const string &basePointerName, const vector<int>& axis, const string& offset) {
+    if (exitFuncButNoNewDefYet) return;
+
     string str, type;
     type = getArrayTypeString(axis);
     str = (pointerName + " = getelementptr " + type + ", " + type + "* " + basePointerName);
@@ -172,6 +187,8 @@ void IR::addGetElePtrLater(const string &pointerName, const string &basePointerN
 
 void IR::addGlobalArray(const string& name, bool isConst, const vector<int> &axis,
                         const vector<vector<string>>& initValues) {
+    if (exitFuncButNoNewDefYet) return;
+
     string code;
     if (isConst) {
         code = ("@" + name + " = dso_local constant ");
@@ -186,6 +203,8 @@ void IR::addGlobalArray(const string& name, bool isConst, const vector<int> &axi
 
 void IR::addGlobalArrayIter(string &code, const vector<int> &axis, int idxAxis, const vector<vector<string>>& initValues,
                             int &idxInitVal) {
+    if (exitFuncButNoNewDefYet) return;
+
     if (idxAxis > axis.size()) return;
     if (idxInitVal >= initValues.size()) {
         if (idxAxis < axis.size()) {
@@ -243,6 +262,8 @@ void IR::addGlobalArrayIter(string &code, const vector<int> &axis, int idxAxis, 
  * @param pointer
  */
 void IR::addLoad(const string& result, const string& pointer) {
+    if (exitFuncButNoNewDefYet) return;
+
     irCodes += (result + " = load i32, i32* " + pointer);
     IR::addNewLine();
 }
@@ -253,12 +274,16 @@ void IR::addLoad(const string& result, const string& pointer) {
  * @param pointer
  */
 void IR::addStore(const string& value, const string pointer) {
+    if (exitFuncButNoNewDefYet) return;
+
     string s = "store i32 " + value + ", i32* " + pointer;
     irCodes += s;
     IR::addNewLine();
 }
 
 void IR::addGlobal(const string &name, const string& value) {
+    if (exitFuncButNoNewDefYet) return;
+
     irCodes += ("@" + name + " = dso_local global i32 " + value);
     IR::addNewLine();
 }
@@ -272,6 +297,8 @@ void IR::addGlobal(const string &name, const string& value) {
  * @param op2
  */
 void IR::addIcmp(string &result, TokenType cond, const string& op1, const string& op2, bool isOp1I1, bool isOp2I1) {
+    if (exitFuncButNoNewDefYet) return;
+
     string newOp1 = op1, newOp2 = op2;
     if (isOp1I1) {
         string temp = IR::generateRegister();
@@ -294,16 +321,22 @@ void IR::addIcmp(string &result, TokenType cond, const string& op1, const string
  * @param value
  */
 void IR::addZextTo(const string &result, const string &value) {
+    if (exitFuncButNoNewDefYet) return;
+
     irCodes += (result + " = zext i1 " + value + " to i32");
     IR::addNewLine();
 }
 
 void IR::addZextToBool(const string &result, const string &value) {
+    if (exitFuncButNoNewDefYet) return;
+
     irCodes += (result + " = zext i32 " + value + " to i1");
     IR::addNewLine();
 }
 
 void IR::addLabel(const string& label) {
+    if (exitFuncButNoNewDefYet) return;
+
     IR::addNewLine();
     irCodes += (label.substr(1) + ":");
     IR::addNewLine();
@@ -311,6 +344,8 @@ void IR::addLabel(const string& label) {
 }
 
 void IR::addBr(const string& cond, const string& trueLabel, const string& falseLabel) {
+    if (exitFuncButNoNewDefYet) return;
+
     if (!exitBlockButNotLabelYet) {
         irCodes += ("br i1 " + cond + ", label " + trueLabel + ", label " + falseLabel);
         IR::addNewLine();
@@ -319,6 +354,8 @@ void IR::addBr(const string& cond, const string& trueLabel, const string& falseL
 }
 
 void IR::addBr(const string& dest) {
+    if (exitFuncButNoNewDefYet) return;
+
     if (!exitBlockButNotLabelYet) {
         irCodes += ("br label " + dest);
         IR::addNewLine();
@@ -327,12 +364,16 @@ void IR::addBr(const string& dest) {
 }
 
 void IR::addRet(const string& value) {
+    if (exitFuncButNoNewDefYet) return;
+
     irCodes += ("ret i32 " + value);
     exitBlockButNotLabelYet = true;
     IR::addNewLine();
 }
 
 void IR::addRet() {
+    if (exitFuncButNoNewDefYet) return;
+
     irCodes += "ret void";
     exitBlockButNotLabelYet = true;
     IR::addNewLine();

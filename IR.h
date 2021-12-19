@@ -13,7 +13,10 @@ private:
     static string tempCodes;
     static bool exitBlockButNotLabelYet;
 
+
 public:
+    static bool exitFuncButNoNewDefYet;
+
     static void addFuncDef(IdentType returnType, const string& funcName, vector<symbolTableNode>& params);
     static void addFuncParams(vector<symbolTableNode>& params);
     static void addFuncParam(symbolTableNode & param);
