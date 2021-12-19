@@ -80,7 +80,7 @@ enum IdentKind {
 };
 
 enum IdentType {
-    IntType = 5, VoidType = 6
+    IntType = 5, VoidType = 6, BoolType = 7
 };
 
 extern ifstream inputFile;

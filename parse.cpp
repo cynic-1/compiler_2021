@@ -1,7 +1,6 @@
 #include "type.h"
 #include "lex.h"
 #include "parse.h"
-#include "globalData.h"
 #include "error.h"
 #include "utils.h"
 #include "IR.h"
@@ -142,7 +141,6 @@ void bType(IdentType &type) {
  */
 void constDef(IdentType type) {
     TokenContext ident = getToken(Ident);
-    int axisNum = 0;
     vector<int> axis;
     while (curTokenContext.tokenType == LBracket) {
         getToken(LBracket);
@@ -157,15 +155,15 @@ void constDef(IdentType type) {
 
     vector<vector<string>> initValues;
     vector<string> ipb;
-    constInitVal(initValues, ipb, 0, axis.size());
+    constInitVal(initValues, ipb, 0, (int)axis.size());
 
     /*************************** new symbolTable *************************/
     ErrorCheckUnit::checkDupDef(curScopeIndex, ident.token, false);
 
-    if (axis.size() > 0) {
+    if (!axis.empty()) {
         vector<int> offsets = getOffsetsVector(axis);
         vector<int> constValues(offsets[0]);
-        int idxConst = 0;
+        int idxConst;
         for (int i = 0; i < initValues.size(); ++i) {
             vector<string> cipb = initValues[i];
             idxConst = i * axis.back();
@@ -190,8 +188,11 @@ void constDef(IdentType type) {
 
 vector<int> getOffsetsVector(vector<int> &axis) {
     vector<int> offsets(axis.size());
+    if (axis.empty()) {
+        return offsets;
+    }
     offsets.back() = 1;
-    for (int i = axis.size()-1; i > 0; --i) {
+    for (int i = (int)axis.size()-1; i > 0; --i) {
         offsets[i-1] = offsets[i] * axis[i];
     }
     return offsets;
@@ -474,7 +475,6 @@ void funcFParam(vector<symbolTableNode> &FPsLinkVersion) {
 void block(vector<symbolTableNode> funcFPsLinkVersion, ScopeKind kind, bool isVoidFunc,
            string funcName) {
     // lastToken must be ')'
-    int funcNameLineNum = lastToken.lineNum;
     getToken(LBrace);
 
     curScopeIndex = SymbolTable::addScope(curScopeIndex, kind, isVoidFunc, std::move(funcName));
@@ -504,7 +504,8 @@ void block(vector<symbolTableNode> funcFPsLinkVersion, ScopeKind kind, bool isVo
  * @return
  */
 pair<IdentType, int> exp(string &result) {
-    pair<IdentType, int> ret = addExp(result);
+    bool isI1;
+    pair<IdentType, int> ret = addExp(result, isI1);
     return ret;
 }
 
@@ -563,7 +564,7 @@ pair<IdentType, int> lVal(string &result, vector<string> &dimIdx, bool isAssigne
     // string dimIndex[MAX_AXIS_NUM];
     while (curTokenContext.tokenType == LBracket) {
         getToken(LBracket);
-
+        // TODO: 如果数组exp出现a == b, !a就麻烦了
         string tempResult;
         exp(tempResult);
         dimIndex.emplace_back(tempResult);
@@ -654,7 +655,6 @@ TokenType unaryOp() {
         getToken(Not);
         ret = Not;
     }
-//    printSyn(UnaryOp);
     return ret;
 }
 
@@ -683,17 +683,19 @@ void funcRParams(vector<pair<IdentType, int>> &argumentsType, vector<string> &ar
  * @param result
  * @return
  */
-pair<IdentType, int> mulExp(string &result) {
+pair<IdentType, int> mulExp(string &result, bool& isI1) {
 
     string tempResult1;
-    pair<IdentType, int> ret = unaryExp(tempResult1);
+    bool tempRes1IsI1 = false;
+    pair<IdentType, int> ret = unaryExp(tempResult1, tempRes1IsI1);
     result = tempResult1;
 
     TokenType op = static_cast<TokenType>(curTokenContext.tokenType);
     while (op == Mul || op == Div || op == Mod) {
         getNextToken();
         string tempResult2;
-        unaryExp(tempResult2);
+        bool tempRes2IsI1 = false;
+        unaryExp(tempResult2, tempRes2IsI1);
 
         vector<string> t;
         tryReplaceConst(tempResult1, t);
@@ -712,10 +714,11 @@ pair<IdentType, int> mulExp(string &result) {
             }
             result = tempResult1;
         } else {
-            string temp = IR::generateRegister();
-            IR::addArithmetic(temp, op, tempResult1, tempResult2);
+            string temp;
+            IR::addArithmetic(temp, op, tempResult1, tempResult2, tempRes1IsI1, tempRes2IsI1);
             SymbolTable::addTempSymbol(curScopeIndex, temp, IntType);
             result = tempResult1 = temp;
+            isI1 = false;
         }
 
         op = static_cast<TokenType>(curTokenContext.tokenType);
@@ -729,17 +732,19 @@ pair<IdentType, int> mulExp(string &result) {
  * @param result
  * @return
  */
-pair<IdentType, int> addExp(string &result) {
+pair<IdentType, int> addExp(string &result, bool& isI1) {
 
     string tempResult1;
-    pair<IdentType, int> ret = mulExp(tempResult1);
+    bool tempRes1IsI1 = false;
+    pair<IdentType, int> ret = mulExp(tempResult1, tempRes1IsI1);
     result = tempResult1;
 
     TokenType op = static_cast<TokenType>(curTokenContext.tokenType);
     while (op == Add || op == Minus) {
         getNextToken();
         string tempResult2;
-        mulExp(tempResult2);
+        bool tempRes2IsI1 = false;
+        mulExp(tempResult2, tempRes2IsI1);
 
         // const replace
         vector<string> t;
@@ -757,10 +762,11 @@ pair<IdentType, int> addExp(string &result) {
             }
             result = tempResult1;
         } else {
-            string temp = IR::generateRegister();
-            IR::addArithmetic(temp, op, tempResult1, tempResult2);
+            string temp;
+            IR::addArithmetic(temp, op, tempResult1, tempResult2, tempRes1IsI1, tempRes2IsI1);
             SymbolTable::addTempSymbol(curScopeIndex, temp, IntType);
             result = tempResult1 = temp;
+            isI1 = false;
         }
 
         op = static_cast<TokenType>(curTokenContext.tokenType);
@@ -774,24 +780,24 @@ pair<IdentType, int> addExp(string &result) {
                 | RelExp ('<' | '>' | '<=' | '>=') AddExp
  * @param result Make sure its type is i32
  */
-void relExp(string &result) {
+void relExp(string &result, bool& isI1) {
     string tempResult1;
-    addExp(tempResult1);
+    bool tempResIsI1 = false;
+    addExp(tempResult1, tempResIsI1);
     auto op = static_cast<TokenType>(curTokenContext.tokenType);
-    bool t1IsBool = false;
     while (op == Lt || op == Leq || op == Gt || op == Geq) {
         getNextToken();
         string tempResult2;
-        addExp(tempResult2);
+        bool tempResIsI2 = false;
+        addExp(tempResult2, tempResIsI2);
 
         // 处理 a > b > c的情况
-        if (t1IsBool){
-            string temp = IR::generateRegister();
-            IR::addZextTo(temp, tempResult1);
-            tempResult1 = temp;
-            t1IsBool = false;
-        }
-
+//        if (t1IsBool){
+//            string temp = IR::generateRegister();
+//            IR::addZextTo(temp, tempResult1);
+//            tempResult1 = temp;
+//            t1IsBool = false;
+//        }
         if (isValue(tempResult1) && isValue(tempResult2)) {
             switch (op) {
                 case Lt:
@@ -808,16 +814,17 @@ void relExp(string &result) {
                     break;
             }
         } else {
-            string temp = IR::generateRegister();
-            IR::addIcmp(temp, op, tempResult1, tempResult2);
+            string temp;
+            IR::addIcmp(temp, op, tempResult1, tempResult2, tempResIsI1, tempResIsI2);
             SymbolTable::addTempSymbol(curScopeIndex, temp, IntType);
             tempResult1 = temp;
-            t1IsBool = true;
+            tempResIsI1 = true;
         }
         op = static_cast<TokenType>(curTokenContext.tokenType);
     }
 
     result = tempResult1;
+    isI1 = tempResIsI1;
 }
 
 /**
@@ -829,21 +836,14 @@ void relExp(string &result) {
  */
 void eqExp(string &cond) {
     string tempResult1;
-    relExp(tempResult1);
+    bool tempRes1IsI1 = false;
+    relExp(tempResult1, tempRes1IsI1);
     auto op = static_cast<TokenType>(curTokenContext.tokenType);
-    bool t1IsBool = false;
     while (op == Eq || op == Neq) {
         getNextToken();
         string tempResult2;
-        relExp(tempResult2);
-
-        if (t1IsBool) {
-            string temp = IR::generateRegister();
-            IR::addZextTo(temp, tempResult1);
-            tempResult1 = temp;
-            t1IsBool = false;
-        }
-
+        bool tempRes2IsI1 = false;
+        relExp(tempResult2, tempRes2IsI1);
         switch (op) {
             case Eq:
                 if (isValue(tempResult1) && isValue(tempResult2)) {
@@ -851,10 +851,10 @@ void eqExp(string &cond) {
                     tempResult1 = to_string(stoi(tempResult1) == stoi(tempResult2));
                 } else {
                     // 不全为数字才需要生成代码
-                    string temp = IR::generateRegister();
-                    IR::addIcmp(temp, op, tempResult1, tempResult2);
-                    SymbolTable::addTempSymbol(curScopeIndex, temp, IntType);
+                    string temp;
+                    IR::addIcmp(temp, op, tempResult1, tempResult2, tempRes1IsI1, tempRes2IsI1);
                     tempResult1 = temp;
+                    tempRes1IsI1 = true;
                 }
                 break;
             case Neq:
@@ -862,10 +862,10 @@ void eqExp(string &cond) {
                     tempResult1 = to_string(stoi(tempResult1) != stoi(tempResult2));
                 } else {
 //                    tempResult1 = addIR(OP_NEQ, tempResult1, tempResult2, AUTO_TMP);
-                    string temp = IR::generateRegister();
-                    IR::addIcmp(temp, op, tempResult1, tempResult2);
-                    SymbolTable::addTempSymbol(curScopeIndex, temp, IntType);
+                    string temp;
+                    IR::addIcmp(temp, op, tempResult1, tempResult2, tempRes1IsI1, tempRes2IsI1);
                     tempResult1 = temp;
+                    tempRes1IsI1 = true;
                 }
                 break;
         }
@@ -938,7 +938,8 @@ void lOrExp(string &trueLabel, string &falseLabel) {
  * @param result Synthesis Attribute
  */
 void constExp(string &result) {
-    addExp(result);
+    bool unused = false;
+    addExp(result, unused);
 }
 
 /*----------------------------------------------
@@ -1314,7 +1315,7 @@ pair<IdentType, int> primaryExp(string &result) {
  * @param result 输出值
  * @return 类型和数组维数的对
  */
-pair<IdentType, int> unaryExp(string &result) {
+pair<IdentType, int> unaryExp(string &result, bool& isI1) {
     pair<IdentType, int> ret;
     if (isPrimaryExpAtUnExp()) {
         ret = primaryExp(result);
@@ -1358,7 +1359,8 @@ pair<IdentType, int> unaryExp(string &result) {
     } else {
         TokenType op = unaryOp();
         string tempResult;
-        ret = unaryExp(tempResult);
+        bool tempIsI1;
+        ret = unaryExp(tempResult, tempIsI1);
 
         vector<string> t;
         tryReplaceConst(tempResult, t);
@@ -1383,16 +1385,20 @@ pair<IdentType, int> unaryExp(string &result) {
             switch (op) {
                 case Add:
                     result = tempResult;
+                    isI1 = tempIsI1;
                     break;
                 case Minus:
-                    result = IR::generateRegister();
-                    IR::addArithmetic(result, Minus, "0", tempResult);
+                    IR::addArithmetic(result, Minus, "0", tempResult, false, tempIsI1);
+                    isI1 = false;
                     break;
                 case Not:
-                    string temp = IR::generateRegister();
-                    IR::addZextTo(temp, tempResult);
-                    result = IR::generateRegister();
-                    IR::addIcmp(result, Eq, temp, "0");
+                    // !a没问题，但是 !!a, !a+1等 涉及到加减乘除和icmp都得换成i32.
+//                    string temp = IR::generateRegister();
+//                    IR::addZextTo(temp, tempResult);
+//                    result = IR::generateRegister();
+//                    IR::addIcmp(result, Eq, temp, "0");
+                    IR::addIcmp(result, Eq, tempResult, "0", tempIsI1, false);
+                    isI1 = true;
                     break;
             }
         }

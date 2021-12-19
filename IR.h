@@ -10,7 +10,7 @@ class IR {
 private:
     static int index;
     static string irCodes;
-    static string temp;
+    static string tempCodes;
     static bool brButNotLabelYet;
 
 public:
@@ -24,7 +24,7 @@ public:
     static void addArgument(string & arguments, bool isArray);
 
     // + - * / %
-    static void addArithmetic(const string& result, TokenType op, const string &op1, const string& op2);
+    static void addArithmetic(string& result, TokenType op, string op1, string op2, bool isOp1I1 = false, bool isOp2I1 = false);
 
     static void addAlloca(const string &result, const vector<int> &axis);
     static void addLoad(const string& result, const string& pointer);
@@ -34,7 +34,7 @@ public:
     static void addGlobalArray(const string& name, bool isConst, const vector<int> &axis, const vector<vector<string>>& initValues);
     static void addGlobalArrayIter(string& code, const vector<int> &axis, int idxAxis, const vector<vector<string>>& initValues, int& idxInitVal);
 
-    static void addIcmp(const string& result, TokenType cond, const string& op1, const string& op2);
+    static void addIcmp(string& result, TokenType cond, const string& op1, const string& op2, bool isOp1I1, bool isOp2I1);
     static void addBr(const string& cond, const string& trueLabel, const string& falseLabel);
     static void addBr(const string& dest);
     static void addRet(const string& value);

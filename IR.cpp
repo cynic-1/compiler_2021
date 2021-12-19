@@ -7,7 +7,7 @@
 
 int IR::index = 0;
 string IR::irCodes;
-string IR::temp;
+string IR::tempCodes;
 bool IR::brButNotLabelYet = false;
 
 
@@ -50,7 +50,18 @@ void IR::addFuncParam(symbolTableNode & param) {
  * @param op1
  * @param op2
  */
-void IR::addArithmetic(const string& result, TokenType op, const string &op1, const string& op2) {
+void IR::addArithmetic(string& result, TokenType op, string op1, string op2, bool isOp1I1, bool isOp2I1) {
+    if (isOp1I1) {
+        string temp = IR::generateRegister();
+        IR::addZextTo(temp, op1);
+        op1 = temp;
+    }
+    if (isOp2I1) {
+        string temp = IR::generateRegister();
+        IR::addZextTo(temp, op2);
+        op2 = temp;
+    }
+    result = IR::generateRegister();
     irCodes += (result + " = " + typeNames[op] + " i32 " + op1);
     addCommaSpace();
     irCodes += op2;
@@ -157,7 +168,7 @@ void IR::addGetElePtrLater(const string &pointerName, const string &basePointerN
             str += (", i32 0");
         }
     }
-    temp += str;
+    tempCodes += str;
 }
 
 void IR::addGlobalArray(const string& name, bool isConst, const vector<int> &axis,
@@ -261,8 +272,20 @@ void IR::addGlobal(const string &name, const string& value) {
  * @param op1
  * @param op2
  */
-void IR::addIcmp(const string &result, TokenType cond, const string& op1, const string& op2) {
-    irCodes += (result + " = icmp " + typeNames[cond] + " i32 " + op1 + ", " + op2);
+void IR::addIcmp(string &result, TokenType cond, const string& op1, const string& op2, bool isOp1I1, bool isOp2I1) {
+    string newOp1 = op1, newOp2 = op2;
+    if (isOp1I1) {
+        string temp = IR::generateRegister();
+        IR::addZextTo(temp, op1);
+        newOp1 = temp;
+    }
+    if (isOp2I1) {
+        string temp = IR::generateRegister();
+        IR::addZextTo(temp, op2);
+        newOp2 = temp;
+    }
+    result = IR::generateRegister();
+    irCodes += (result + " = icmp " + typeNames[cond] + " i32 " + newOp1 + ", " + newOp2);
     IR::addNewLine();
 }
 
@@ -329,9 +352,9 @@ void IR::addCommaSpace() {
 void IR::addNewLine() {
     irCodes += "\n";
     write2File();
-    if (!temp.empty()) {
-        irCodes = temp;
-        temp.clear();
+    if (!tempCodes.empty()) {
+        irCodes = tempCodes;
+        tempCodes.clear();
         addNewLine();
     }
 }

@@ -20,11 +20,11 @@ pair<IdentType, int> lVal(string& result, vector<string>& dimIndex, bool isAssig
 pair<IdentType, int> number(string& result);
 TokenType unaryOp();
 void funcRParams(vector<pair<IdentType, int>>& argumentsType, vector<string>& arguments);
-pair<IdentType, int> mulExp(string& result);
-pair<IdentType, int> addExp(string& result);
+pair<IdentType, int> mulExp(string& result, bool& isI1);
+pair<IdentType, int> addExp(string& result, bool& isI1);
 
 
-void relExp(string& cond);
+void relExp(string& cond, bool& isI1);
 void eqExp(string& cond);
 void lAndExp(string& trueLabel, string& falseLabel);
 void lOrExp(string& trueLabel, string& falseLabel);
@@ -36,7 +36,7 @@ void initVal(vector<vector<string>>& initValues, vector<string>& initValuePerBra
 void blockItem();
 void stmt(string &label);
 pair<IdentType, int> primaryExp(string& result);
-pair<IdentType, int> unaryExp(string& result);
+pair<IdentType, int> unaryExp(string& result, bool& isI1);
 bool assignStmt();
 
 void addLibFun();
