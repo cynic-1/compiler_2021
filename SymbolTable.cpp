@@ -214,7 +214,6 @@ Scope *SymbolTable::findScope(int scopeIndex) {
     return &(allScopes.at(scopeIndex));
 }
 
-// return the new curScopeIndex
 int SymbolTable::exitScope(int curScopeIndex) {
     Scope *curScope = SymbolTable::findScope(curScopeIndex);
     if (curScope->parentScopeIndex == NON_PARENT) {

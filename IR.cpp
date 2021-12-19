@@ -4,7 +4,7 @@
 int IR::index = 0;
 string IR::irCodes;
 string IR::tempCodes;
-bool IR::brButNotLabelYet = false;
+bool IR::exitBlockButNotLabelYet = false; // br, ret
 
 
 void IR::addFuncDef(IdentType returnType, const string& funcName, vector<symbolTableNode>& params) {
@@ -304,32 +304,34 @@ void IR::addLabel(const string& label) {
     IR::addNewLine();
     irCodes += (label.substr(1) + ":");
     IR::addNewLine();
-    brButNotLabelYet = false;
+    exitBlockButNotLabelYet = false;
 }
 
 void IR::addBr(const string& cond, const string& trueLabel, const string& falseLabel) {
-    if (!brButNotLabelYet) {
+    if (!exitBlockButNotLabelYet) {
         irCodes += ("br i1 " + cond + ", label " + trueLabel + ", label " + falseLabel);
         IR::addNewLine();
-        brButNotLabelYet = true;
+        exitBlockButNotLabelYet = true;
     }
 }
 
 void IR::addBr(const string& dest) {
-    if (!brButNotLabelYet) {
+    if (!exitBlockButNotLabelYet) {
         irCodes += ("br label " + dest);
         IR::addNewLine();
-        brButNotLabelYet = true;
+        exitBlockButNotLabelYet = true;
     }
 }
 
 void IR::addRet(const string& value) {
     irCodes += ("ret i32 " + value);
+    exitBlockButNotLabelYet = true;
     IR::addNewLine();
 }
 
 void IR::addRet() {
     irCodes += "ret void";
+    exitBlockButNotLabelYet = true;
     IR::addNewLine();
 }
 

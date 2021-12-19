@@ -11,7 +11,7 @@ private:
     static int index;
     static string irCodes;
     static string tempCodes;
-    static bool brButNotLabelYet;
+    static bool exitBlockButNotLabelYet;
 
 public:
     static void addFuncDef(IdentType returnType, const string& funcName, vector<symbolTableNode>& params);

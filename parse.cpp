@@ -522,9 +522,13 @@ void block(vector<symbolTableNode> funcFPsLinkVersion, ScopeKind kind, bool isVo
     getToken(RBrace);
 
     ErrorCheckUnit::checkNoReturn(curScopeIndex);
-    Scope scope = SymbolTable::allScopes.at(curScopeIndex);
-    if (scope.scopeKind == FuncScope && scope.isVoidFunc && !scope.hasReturned) {
+    Scope* scope = SymbolTable::findScope(curScopeIndex);
+    if (scope->scopeKind == FuncScope && scope->isVoidFunc && !scope->hasReturned) {
         IR::addRet();
+    } else if (scope->scopeKind == NormalScope) {
+        if (scope->hasReturned) {
+            SymbolTable::findScope(scope->parentScopeIndex)->hasReturned = true;
+        }
     }
     curScopeIndex = SymbolTable::exitScope(curScopeIndex);
 }
@@ -1104,6 +1108,7 @@ void blockItem() {
 void ifStmt(string & label) {
     getToken(If);
     getToken(LParen);
+    bool hasReturnIf;
 
     // always make sure the label have and only have tagged once if generated and used in jump.
 
@@ -1124,13 +1129,15 @@ void ifStmt(string & label) {
         IR::addLabel(l);
     }
 
-    // 跳转到下一个基本块，没有标签，咋搞？从上一层拿
-    label = IR::generateRegister();
-    IR::addBr(label);
+    hasReturnIf = SymbolTable::findScope(curScopeIndex)->hasReturned;
+
+    if (!hasReturnIf) {
+        // 跳转到下一个基本块，没有标签，咋搞？从上一层拿
+        label = IR::generateRegister();
+        IR::addBr(label);
+    }
 
     curScopeIndex = SymbolTable::exitScope(curScopeIndex);
-
-
 
     if (curTokenContext.tokenType == Else) {
         getToken(Else);
@@ -1145,14 +1152,22 @@ void ifStmt(string & label) {
             IR::addLabel(l);
         }
 
+        Scope* curScope = SymbolTable::findScope(curScopeIndex);
+        bool hasReturnElse = curScope->hasReturned;
+        int parentScopeIdx = curScope->parentScopeIndex;
         curScopeIndex = SymbolTable::exitScope(curScopeIndex);
 
-        IR::addBr(label);
-
+        if (hasReturnIf && hasReturnElse) {
+            SymbolTable::findScope(parentScopeIdx)->hasReturned = true;
+        } else if (!hasReturnElse) {
+            IR::addBr(label);
+        }
     } else {
-        // don't have else part, tag the false label plainly.
-        IR::addLabel(falseLabel);
-        IR::addBr(label);
+        if (!hasReturnIf) {
+            // don't have else part, tag the false label plainly.
+            IR::addLabel(falseLabel);
+            IR::addBr(label);
+        }
     }
 }
 
@@ -1185,7 +1200,6 @@ void whileStmt(string &condLabel, string &falseLabel) {
 
     IR::addBr(condLabel);
 
-    //-------------------- new symtable -----------------
     curScopeIndex = SymbolTable::exitScope(curScopeIndex);
 }
 
@@ -1220,7 +1234,7 @@ void continueStmt() {
  */
 void returnStmt() {
     getToken(Return);
-    string retResult = "0";
+    string retResult;
     if (isExpAtReturnStmt()) {
         ErrorCheckUnit::checkVoidReturn(curScopeIndex);
         exp(retResult);
@@ -1230,7 +1244,11 @@ void returnStmt() {
     SymbolTable::findScope(curScopeIndex)->hasReturned = true;
 
     string funcName = SymbolTable::findFirstFuncScope(curScopeIndex)->funcName;
-    IR::addRet(retResult);
+    if (retResult.empty()) {
+        IR::addRet();
+    } else {
+        IR::addRet(retResult);
+    }
 }
 
 /**
