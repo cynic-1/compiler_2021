@@ -314,7 +314,6 @@ void varDef(IdentType type) {
                 } else if (initValues.empty()) {
                     IR::addGlobal(sNode->name, "0");
                 }
-                sNode->pointerName = "@" + sNode->name;
             }
             else { // dimension > 0
                 // TODO: global array declare
@@ -334,6 +333,7 @@ void varDef(IdentType type) {
                 IR::addGlobalArray(ident.token, false, axis, initValues);
             }
         }
+        sNode->pointerName = "@" + sNode->name;
     }
 }
 
