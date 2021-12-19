@@ -1157,9 +1157,10 @@ void ifStmt(string & label) {
 
         if (hasReturnIf && hasReturnElse) {
             SymbolTable::findScope(parentScopeIdx)->hasReturned = true;
-        } else if (!hasReturnElse) {
-            IR::addBr(label);
         }
+
+        IR::addBr(label);
+
     } else {
         // don't have else part, tag the false label plainly.
         IR::addLabel(falseLabel);

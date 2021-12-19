@@ -12,6 +12,7 @@ void IR::addFuncDef(IdentType returnType, const string& funcName, vector<symbolT
     IR::addLParen();
     IR::addFuncParams(params);
     IR::addRParen();
+    exitBlockButNotLabelYet = false;
 }
 void IR::addFuncParams(vector<symbolTableNode>& params) {
     bool noParam = true;
