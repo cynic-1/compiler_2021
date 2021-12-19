@@ -1131,11 +1131,9 @@ void ifStmt(string & label) {
 
     hasReturnIf = SymbolTable::findScope(curScopeIndex)->hasReturned;
 
-    if (!hasReturnIf) {
-        // 跳转到下一个基本块，没有标签，咋搞？从上一层拿
-        label = IR::generateRegister();
-        IR::addBr(label);
-    }
+    // 跳转到下一个基本块，没有标签，咋搞？从上一层拿
+    label = IR::generateRegister();
+    IR::addBr(label);
 
     curScopeIndex = SymbolTable::exitScope(curScopeIndex);
 
@@ -1163,11 +1161,9 @@ void ifStmt(string & label) {
             IR::addBr(label);
         }
     } else {
-        if (!hasReturnIf) {
-            // don't have else part, tag the false label plainly.
-            IR::addLabel(falseLabel);
-            IR::addBr(label);
-        }
+        // don't have else part, tag the false label plainly.
+        IR::addLabel(falseLabel);
+        IR::addBr(label);
     }
 }
 
