@@ -48,6 +48,8 @@ void IR::addFuncParam(symbolTableNode & param) {
  * @param op2
  */
 void IR::addArithmetic(string& result, TokenType op, string op1, string op2, bool isOp1I1, bool isOp2I1) {
+    if (isPreCheck) return;
+
     if (isOp1I1) {
         string temp = IR::generateRegister();
         IR::addZextTo(temp, op1);
