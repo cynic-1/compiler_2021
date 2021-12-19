@@ -160,9 +160,9 @@ void constDef(IdentType type) {
     /*************************** new symbolTable *************************/
     ErrorCheckUnit::checkDupDef(curScopeIndex, ident.token, false);
 
-    if (!axis.empty()) {
+    if (!axis.empty()) { // array
         vector<int> offsets = getOffsetsVector(axis);
-        vector<int> constValues(offsets[0]);
+        vector<int> constValues(offsets.front() * axis.back());
         int idxConst;
         for (int i = 0; i < initValues.size(); ++i) {
             vector<string> cipb = initValues[i];
@@ -247,10 +247,11 @@ void varDef(IdentType type) {
             initVal(initValues, ipb, 0, axis.size());
 
             // assign with the init values, and iniValues.size() is the count of the var
-            if (initValues.empty()) {
+            if (initValues.empty() && !ipb.empty()) {
+                // prevent int a[4][2] = {};
                 IR::addStore(ipb[0], pointerName);
             } else {
-                // array
+                // array init
                 vector<int> offsets = getOffsetsVector(axis);
                 int bytes = offsets.front() * axis.front() * 4;
 
@@ -316,7 +317,7 @@ void varDef(IdentType type) {
                 }
             }
             else { // dimension > 0
-                // TODO: global array declare
+                // TODO: global array declare (with assign)
                 vector<int> offsets = getOffsetsVector(axis);
 
                 // 更新pointerName为i32*型的，添加offsets
@@ -326,10 +327,11 @@ void varDef(IdentType type) {
                 IR::addGlobalArray(ident.token, false, axis, initValues);
             }
         } else { // no-assign
-            if (axis.empty()) {
+            if (axis.empty()) { // normal var
                 IR::addGlobal(ident.token, "0");
-            } else {
+            } else { // global no-assign array
                 vector<vector<string>> initValues;
+                sNode->offsets = getOffsetsVector(axis);
                 IR::addGlobalArray(ident.token, false, axis, initValues);
             }
         }
