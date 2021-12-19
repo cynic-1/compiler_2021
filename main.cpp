@@ -21,9 +21,9 @@ int main(int argc, char* argv[]) {
     if (inputFile.fail()) {
         return -1;
     }
-    string str;
-    getline(inputFile, str, '\0');
-    cout << str;
+//    string str;
+//    getline(inputFile, str, '\0');
+//    cout << str;
     getNextToken();
     compUnit();
     if (curTokenContext.tokenType == READ_EOF) {
