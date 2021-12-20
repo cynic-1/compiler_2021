@@ -130,7 +130,11 @@ void compUnit() {
         decl();
     }
     while (isFuncDefBranch()) {
-        funcDef();
+        if (isDeclBranch()) {
+            decl();
+        } else {
+            funcDef();
+        }
     }
     // 因为不能调用声明在后面的函数，所以main函数后面的函数对程序结果没有影响，不用管了。yeah！
     mainFuncDef();
@@ -1252,7 +1256,7 @@ void returnStmt() {
     getToken(Semicolon);
 
     SymbolTable::findScope(curScopeIndex)->hasReturned = true;
-    cout << SymbolTable::findScope(curScopeIndex)->parentScopeIndex << endl;
+//    cout << SymbolTable::findScope(curScopeIndex)->parentScopeIndex << endl;
     string funcName = SymbolTable::findFirstFuncScope(curScopeIndex)->funcName;
     if (retResult.empty()) {
         IR::addRet();
