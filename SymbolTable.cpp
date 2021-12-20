@@ -34,7 +34,7 @@ int SymbolTable::addScope(int parentIndex, ScopeKind kind, bool isVoidFunc, stri
     nextIndex++;
 
 
-    if (kind == FuncScope || parentIndex == NON_PARENT) {
+    if (kind == FuncScope || parentIndex == ROOT) {
         newScope.localAddr = 0;
     } else {
         newScope.localAddr = findScope(parentIndex)->localAddr;
@@ -201,7 +201,7 @@ symbolTableNode *SymbolTable::findVarSymbol(int curScope, string &varName) {
         if (ret != nullptr) {
             break;
         }
-        if (searchScope->parentScopeIndex == NON_PARENT) {
+        if (searchScope->parentScopeIndex == ROOT) {
             break;
         } else {
             searchScope = SymbolTable::findScope(searchScope->parentScopeIndex);
@@ -216,8 +216,8 @@ Scope *SymbolTable::findScope(int scopeIndex) {
 
 int SymbolTable::exitScope(int curScopeIndex) {
     Scope *curScope = SymbolTable::findScope(curScopeIndex);
-    if (curScope->parentScopeIndex == NON_PARENT) {
-        return NON_PARENT;
+    if (curScope->parentScopeIndex == ROOT) {
+        return ROOT;
     }
 
     // refill the const array
@@ -270,7 +270,7 @@ symbolTableNode SymbolTable::createParamItem(const string &name, const string &r
 Scope *SymbolTable::findFirstFuncScope(int curScope) {
     int searchScopeIdx = curScope;
     while (allScopes.at(searchScopeIdx).scopeKind != FuncScope) {
-        if (allScopes.at(searchScopeIdx).parentScopeIndex == NON_PARENT) {
+        if (allScopes.at(searchScopeIdx).parentScopeIndex == ROOT) {
             break;
         }
         searchScopeIdx = allScopes.at(searchScopeIdx).parentScopeIndex;
@@ -289,7 +289,7 @@ symbolTableNode* SymbolTable::findVarSymbol4ErrorCheck(int curScope, string& var
 Scope* SymbolTable::findFirstLoopScope(int curScope) {
     int searchScopeIdx = curScope;
     while (allScopes.at(searchScopeIdx).scopeKind != LoopScope) {
-        if (allScopes.at(searchScopeIdx).parentScopeIndex == NON_PARENT) {
+        if (allScopes.at(searchScopeIdx).parentScopeIndex == ROOT) {
             break;
         }
         searchScopeIdx = allScopes.at(searchScopeIdx).parentScopeIndex;

@@ -3,7 +3,7 @@
 
 #include "type.h"
 
-#define NON_PARENT -1
+#define ROOT -1
 
 /**
  * 符号表节点类

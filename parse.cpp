@@ -9,7 +9,7 @@
 bool isPreCheck = false;
 TokenContext lastToken;
 
-int curScopeIndex = NON_PARENT;
+int curScopeIndex = ROOT;
 
 
 string getOffset(const vector<string>& calledAxis, const vector<int> & offsets) {
@@ -122,7 +122,7 @@ TokenContext getToken(int type) {
  */
 void compUnit() {
     // create the root scope: index=0, aka global
-    curScopeIndex = SymbolTable::addScope(NON_PARENT, NormalScope);
+    curScopeIndex = SymbolTable::addScope(ROOT, NormalScope);
     addLibFun();
     IR::addFuncDecl();
 
@@ -184,7 +184,7 @@ void constDef(IdentType type) {
 
     if (!axis.empty()) { // array
         vector<int> offsets = getOffsetsVector(axis);
-        vector<int> constValues(offsets.front() * axis.back());
+        vector<int> constValues(offsets.front() * axis.front());
         int idxConst;
         for (int i = 0; i < initValues.size(); ++i) {
             vector<string> cipb = initValues[i];
@@ -195,9 +195,9 @@ void constDef(IdentType type) {
         }
         SymbolTable::addConstSymbol(curScopeIndex, ident.token, type, axis, constValues);
         // 常量中除了全局常量，都不输出IR，只填表
+        symbolTableNode* sNode = SymbolTable::findVarSymbol(curScopeIndex, ident.token);
+        sNode->offsets = offsets;
         if (curScopeIndex == 0) { // global array
-            symbolTableNode* sNode = SymbolTable::findVarSymbol(curScopeIndex, ident.token);
-            sNode->offsets = offsets;
             IR::addGlobalArray(ident.token, true, axis, initValues);
         }
     } else {
