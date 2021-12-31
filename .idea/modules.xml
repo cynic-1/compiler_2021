@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/compiler_2021.iml" filepath="$PROJECT_DIR$/.idea/compiler_2021.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/miniSysY.iml" filepath="$PROJECT_DIR$/.idea/miniSysY.iml" />
     </modules>
   </component>
 </project>

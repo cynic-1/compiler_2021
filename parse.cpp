@@ -209,7 +209,6 @@ void constDef(IdentType type) {
         constValues[0] = stoi(ipb.front());
         SymbolTable::addConstSymbol(curScopeIndex, ident.token, type, axis, constValues);
     }
-
 }
 
 vector<int> getOffsetsVector(vector<int> &axis) {
@@ -351,7 +350,7 @@ void varDef(IdentType type) {
                 sNode->offsets = offsets;
                 IR::addGlobalArray(ident.token, false, axis, initValues);
             }
-        } else { // global array no-assign
+        } else { // global no-assign
             if (axis.empty()) { // normal var
                 IR::addGlobal(ident.token, "0");
                 sNode->pointerName = "@" + sNode->name;
@@ -944,7 +943,6 @@ void eqExp(string &cond) {
  */
 void lAndExp(string &trueLabel, string &falseLabel) {
 
-    // eqExp won't appear "||", so maybe it doesn't need trueLabel?
     // always continue the following code if true without jumping, only jump to falseLabel when false.
     string newTrueLabel;
     string cond;
@@ -987,7 +985,7 @@ void lOrExp(string &trueLabel, string &falseLabel) {
         lAndExp(trueLabel, lAndFalseLabel);
     }
 
-    // if still didn't jump to the true station, means every lAndExp is false, then the whole lOr is false, goto false location.
+    // if still didn't jump to the true labell, means every lAndExp is false, then the whole lOr is false, goto false location.
     IR::addLabel(lAndFalseLabel);
     IR::addBr(falseLabel);
 }
